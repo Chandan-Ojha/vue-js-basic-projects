@@ -1,6 +1,22 @@
 var app = Vue.createApp({
   data() {
     return {
+      confirmed: false,
+      name: "",
+      mobile: "",
+      appliedCoupon: null,
+      couponCode: "",
+      coupons: [
+        {
+          code: "100TAKAOFF",
+          discount: 100,
+        },
+        {
+          code: "200TAKAOFF",
+          discount: 200,
+        },
+      ],
+
       seatStates: {
         sold: {
           text: "Sold",
@@ -19,6 +35,7 @@ var app = Vue.createApp({
           color: "#00ff00",
         },
       },
+
       seats: [
         {
           name: "A1",
@@ -148,6 +165,18 @@ var app = Vue.createApp({
       let sc = this.seats.filter((item) => item.type === "selected");
       return sc;
     },
+    totalCost() {
+      let tc = 0;
+      this.selectedSeats.forEach((seat) => {
+        tc += seat.price;
+      });
+
+      if (this.appliedCoupon != null) {
+        tc = tc - this.appliedCoupon.discount;
+      }
+
+      return tc;
+    },
   },
   methods: {
     handleClick(i) {
@@ -156,11 +185,54 @@ var app = Vue.createApp({
         alert("You can't select this seat !");
         return;
       }
+
+      if (clickedSeat.type == "available" && this.selectedSeats.length > 2) {
+        alert("You can not select more than 3 seats");
+        return;
+      }
+
       clickedSeat.type =
         clickedSeat.type === "selected" ? "available" : "selected";
     },
+
+    confirm() {
+      if (!this.name || !this.mobile) {
+        alert("Please enter name and mobile");
+        return;
+      }
+
+      this.confirmed = true;
+    },
+
+    resetData() {
+      this.confirmed = false;
+      this.name = "";
+      this.mobile = "";
+      this.appliedCoupon = null;
+
+      this.seats.forEach((seat) => {
+        if (seat.type === "selected") {
+          seat.type = "sold";
+        }
+      });
+    },
   },
-  watch: {},
+  watch: {
+    couponCode(newValue) {
+      if (newValue.length === 10) {
+        let searchedCoupons = this.coupons.filter(
+          (item) => item.code === newValue
+        );
+
+        if (searchedCoupons.length === 1) {
+          this.appliedCoupon = searchedCoupons[0];
+          this.couponCode = "";
+        } else {
+          alert("Coupon not valid!");
+        }
+      }
+    },
+  },
 });
 
 app.mount("#app");
